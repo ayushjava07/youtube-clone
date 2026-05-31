@@ -9,7 +9,7 @@ interface Video {
     username: string;
   };
   title: string;
-  slug:string
+  id: string;
 }
 
 export function Landing() {
@@ -38,7 +38,7 @@ export function Landing() {
           title={video.title}
           profileImg={video.user.ProfileImage}
           userName={video.user.username}
-          href={`/watch?id=${video.slug}`}
+          href={`/watch?id=${video.id}`}
         />
       ))}
       </div>

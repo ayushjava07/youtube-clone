@@ -102,7 +102,7 @@ app.get("/videos", async (req, res) => {
   }
 });
 
-app.get("/videos/:id", async (req, res) => {
+app.get("/video/:id", async (req, res) => {
   try {
     const video = await prisma.uploads.findFirst({
       where: { id: req.params.id },
