@@ -1,102 +1,322 @@
 import axios from "axios";
+import { useState } from "react";
+import { useDropzone } from "react-dropzone";
 
-function UploadPage() {
+export default function UploadPage() {
+  const [videoFile, setVideoFile] =
+    useState<File | null>(null);
+
+  const [thumbnailFile, setThumbnailFile] =
+    useState<File | null>(null);
+
+  const [title, setTitle] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const {
+    getRootProps,
+    getInputProps,
+  } = useDropzone({
+    accept: {
+      "video/*": [],
+    },
+    maxFiles: 1,
+    onDrop: (acceptedFiles) => {
+      setVideoFile(
+        acceptedFiles[0] || null
+      );
+    },
+  });
+
+  const {
+    getRootProps: getThumbnailRootProps,
+    getInputProps: getThumbnailInputProps,
+  } = useDropzone({
+    accept: {
+      "image/*": [],
+    },
+    maxFiles: 1,
+    onDrop: (acceptedFiles) => {
+      setThumbnailFile(
+        acceptedFiles[0] || null
+      );
+    },
+  });
+
+  async function uploadFunction() {
+    try {
+      if (!videoFile) {
+        alert("Please select a video");
+        return;
+      }
+
+      if (!thumbnailFile) {
+        alert("Please select a thumbnail");
+        return;
+      }
+
+      if (!title.trim()) {
+        alert("Please enter a title");
+        return;
+      }
+
+      setLoading(true);
+
+      // Upload Video
+      const videoFormData =
+        new FormData();
+
+      videoFormData.append(
+        "file",
+        videoFile
+      );
+
+      videoFormData.append(
+        "upload_preset",
+        "youtube_clone"
+      );
+
+      const videoResponse =
+        await fetch(
+          "https://api.cloudinary.com/v1_1/dhirmdjpz/video/upload",
+          {
+            method: "POST",
+            body: videoFormData,
+          }
+        );
+
+      const videoData =
+        await videoResponse.json();
+
+      console.log(
+        "Video Upload:",
+        videoData
+      );
+
+      if (
+        !videoData.secure_url
+      ) {
+        throw new Error(
+          "Video upload failed"
+        );
+      }
+
+      // Upload Thumbnail
+      const thumbnailFormData =
+        new FormData();
+
+      thumbnailFormData.append(
+        "file",
+        thumbnailFile
+      );
+
+      thumbnailFormData.append(
+        "upload_preset",
+        "youtube_clone"
+      );
+
+      const thumbnailResponse =
+        await fetch(
+          "https://api.cloudinary.com/v1_1/dhirmdjpz/image/upload",
+          {
+            method: "POST",
+            body: thumbnailFormData,
+          }
+        );
+
+      const thumbnailData =
+        await thumbnailResponse.json();
+
+      console.log(
+        "Thumbnail Upload:",
+        thumbnailData
+      );
+
+      if (
+        !thumbnailData.secure_url
+      ) {
+        throw new Error(
+          "Thumbnail upload failed"
+        );
+      }
+
+      // Save Metadata
+      await axios.post(
+        "http://localhost:3001/upload",
+        {
+          VideoUrl:
+            videoData.secure_url,
+          title,
+          thumbnail:
+            thumbnailData.secure_url,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${
+              localStorage.getItem(
+                "token"
+              ) || ""
+            }`,
+          },
+        }
+      );
+
+      alert(
+        "Video uploaded successfully!"
+      );
+
+      window.location.href = "/";
+    } catch (error) {
+      console.error(error);
+      alert(
+        "Upload failed. Check console."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div
       style={{
         width: "100%",
-        height: "100vh",
+        minHeight: "100vh",
+        background: "#0f0f0f",
+        color: "white",
         display: "flex",
-        flexDirection: "column",
+        flexDirection:
+          "column",
         alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#f87d7d",
+        justifyContent:
+          "center",
+        gap: "20px",
+        padding: "20px",
       }}
     >
-      <h1
-        style={{ fontSize: "32px", fontWeight: "bold", marginBottom: "20px" }}
-      >
+      <h1>
         Upload Video
       </h1>
+         {/* TITLE */}
       <input
-        className="video"
-        style={{ marginBottom: "10px", padding: "10px", fontSize: "16px" }}
-        type="file"
-        placeholder="Enter video URL"
+        value={title}
+        onChange={(e) =>
+          setTitle(
+            e.target.value
+          )
+        }
+        placeholder="Video Title"
+        style={{
+          width: "500px",
+          padding: "12px",
+          borderRadius: "8px",
+          border: "1px solid #ccc",
+          fontSize: "16px",
+        }}
       />
-      <input
-        className="videoTitle"
-        style={{ marginBottom: "10px", padding: "10px", fontSize: "16px" }}
-        type="text"
-        placeholder="Enter video title"
-      />
-      <input
-        className="thumbnailUrl"
-        style={{ marginBottom: "10px", padding: "10px", fontSize: "16px" }}
-        type="url"
-        placeholder="Enter thumbnail URL"
-      />
-      <button
-        style={{ marginTop: "20px", padding: "10px 20px", fontSize: "16px" }}
-        onClick={uploadFunction}
+      {/* VIDEO */}
+      <div
+        {...getRootProps()}
+        style={{
+          width: "500px",
+          height: "200px",
+          border:
+            "2px dashed white",
+          borderRadius:
+            "12px",
+          display: "flex",
+          justifyContent:
+            "center",
+          alignItems:
+            "center",
+          cursor: "pointer",
+        }}
       >
-        Upload
+        
+        <input
+          {...getInputProps()}
+        />
+
+        {videoFile ? (
+          <div>
+            <p>
+              Video Selected
+            </p>
+            <p>
+              {
+                videoFile.name
+              }
+            </p>
+          </div>
+        ) : (
+          <p>
+            Drag & Drop
+            Video Here
+          </p>
+        )}
+      </div>
+
+   
+
+      {/* THUMBNAIL */}
+      <div
+        {...getThumbnailRootProps()}
+        style={{
+          width: "500px",
+          height: "200px",
+          border:
+            "2px dashed white",
+          borderRadius:
+            "12px",
+          display: "flex",
+          justifyContent:
+            "center",
+          alignItems:
+            "center",
+          cursor: "pointer",
+        }}
+      >
+        <input
+          {...getThumbnailInputProps()}
+        />
+
+        {thumbnailFile ? (
+          <div>
+            <p>
+              Thumbnail
+              Selected
+            </p>
+            <p>
+              {
+                thumbnailFile.name
+              }
+            </p>
+          </div>
+        ) : (
+          <p>
+            Drag & Drop
+            Thumbnail Here
+          </p>
+        )}
+      </div>
+
+      <button
+        onClick={
+          uploadFunction
+        }
+        disabled={loading}
+        style={{
+          padding:
+            "12px 24px",
+          cursor: "pointer",
+          fontSize: "16px",
+        }}
+      >
+        {loading
+          ? "Uploading..."
+          : "Upload"}
       </button>
     </div>
   );
-}
-
-export default UploadPage;
-
-async function uploadFunction() {
-  const videoEl = document.querySelector<HTMLInputElement>(".video");
-  const videoTitleEl = document.querySelector<HTMLInputElement>(".videoTitle");
-  const thumbnailUrlEl =
-    document.querySelector<HTMLInputElement>(".thumbnailUrl");
-
-  if (!videoEl || !videoTitleEl || !thumbnailUrlEl) return;
-  if (!videoEl.files || !videoEl.files[0]) return;
-
-//   const videoUrl = videoEl.value;
-  const videoTitle = videoTitleEl.value;
-  const thumbnailUrl = thumbnailUrlEl.value;
-  const formData = new FormData();
-
-  formData.append("file", videoEl.files[0]);
-  formData.append("upload_preset", "youtube_clone");
-
-  const response = await fetch(
-    "https://api.cloudinary.com/v1_1/dhirmdjpz/video/upload",
-    {
-      method: "POST",
-      body: formData,
-    },
-  );
-
-  const cloudinaryData = await response.json();
-   const videoUrl =
-    cloudinaryData.secure_url;
-  const data = await axios
-    .post(
-      "http://localhost:3001/upload",
-      {
-        VideoUrl: videoUrl,
-        title: videoTitle,
-        thumbnail: thumbnailUrl,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-        },
-      },
-    )
-    .then((response) => {
-      console.log("Upload successful:", response.data);
-      alert("Video uploaded successfully!");
-      window.location.href = "/";
-    })
-    .catch((error) => {
-      console.error("Upload failed:", error);
-      alert("Failed to upload video. Please try again.");
-    });
 }
