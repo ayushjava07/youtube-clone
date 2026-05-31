@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { prisma } from "./db";
 
+
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -14,7 +15,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const signupSchema = z.object({
   username: z.string().min(3),
   password: z.string().min(6),
-  gender: z.enum(["Male", "Female", "Others"]),
+  gender: z.enum(["Male", "Female", "Others"]).default("Others"),
   channelName: z.string().optional(),
   description: z.string().optional(),
 });
@@ -25,7 +26,7 @@ const loginSchema = z.object({
 });
 
 const uploadSchema = z.object({
-  slug: z.string(),
+  title: z.string(),
   VideoUrl: z.string().url(),
   thumbnail: z.string().url(),
 });
@@ -101,10 +102,10 @@ app.get("/videos", async (req, res) => {
   }
 });
 
-app.get("/videos/:slug", async (req, res) => {
+app.get("/videos/:id", async (req, res) => {
   try {
     const video = await prisma.uploads.findFirst({
-      where: { slug: req.params.slug },                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+      where: { id: req.params.id },
       include: {
         user: {
           select: {
@@ -133,7 +134,7 @@ app.get("/search", async (req, res) => {
     const videos = await prisma.uploads.findMany({
       where: {
         OR: [
-          { slug: { contains: String(q), mode: "insensitive" } },
+          { title: { contains: String(q), mode: "insensitive" } },
           { user: { channelName: { contains: String(q), mode: "insensitive" } } },
         ],
       },
@@ -155,16 +156,29 @@ app.get("/search", async (req, res) => {
 
 app.post("/upload", authenticateToken, async (req: any, res: any) => {
   try {
+    console.log("BODY:", req.body);
+    console.log("USER:", req.user);
+
     const data = uploadSchema.parse(req.body);
+
+    console.log("PARSED:", data);
+
     const video = await prisma.uploads.create({
       data: {
         ...data,
-        userId: req.user.userId,
+        user: {
+          connect: { id: req.user.userId },
+        },
       },
     });
+
     res.status(201).json(video);
   } catch (error: any) {
-    res.status(400).json({ error: error.message });
+    console.log(error);
+    res.status(400).json({
+      error: error.message,
+      details: error
+    });
   }
 });
 

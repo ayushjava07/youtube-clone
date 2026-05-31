@@ -25,14 +25,20 @@ async function uploadFunction(){
     const videoTitle = videoTitleEl.value;
     const thumbnailUrl = thumbnailUrlEl.value;
 
-    const data = await axios.post("/upload", {
-        videoUrl: videoUrl,
+    const data = await axios.post("http://localhost:3001/upload", {
+        VideoUrl: videoUrl,
         title: videoTitle,
-        thumbnailUrl: thumbnailUrl,
+        thumbnail: thumbnailUrl,
     },{
         headers: {
             Authorization: `Bearer ${localStorage.getItem("token") || ""}`
         },
     }
-)
+    ).then((response) => {        console.log("Upload successful:", response.data);
+        alert("Video uploaded successfully!");
+        window.location.href = "/";
+    }).catch((error) => {
+        console.error("Upload failed:", error);
+        alert("Failed to upload video. Please try again.");
+    });
 }

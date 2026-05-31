@@ -1,21 +1,21 @@
 import axios from "axios";
 
-export function Signin() {
+export function Signup() {
   return (
     <div>
-      <h1>Sign In</h1>
+      <h1>Sign Up</h1>
       <input type="text" placeholder="username" />
       <input type="password" placeholder="Password" />
-      <button onClick={handleSignin}>Sign In</button>
+      <button onClick={handleSignup}>Sign Up</button>
     </div>
   );
 }
 
-async function handleSignin() {
+async function handleSignup() {
   const username = (document.querySelector('input[type="text"]') as HTMLInputElement).value;
   const password = (document.querySelector('input[type="password"]') as HTMLInputElement).value;
-  // Implement sign-in logic here
-  await axios.post("http://localhost:3001/login", {
+  // Implement sign-up logic here
+  await axios.post("http://localhost:3001/signup", {
     username: username,
     password: password
   }).then((response) => {
@@ -23,8 +23,8 @@ async function handleSignin() {
     localStorage.setItem("token", token);
     localStorage.setItem("userId", userId);
     window.location.href = "/";
-    console.log("Sign-in successful:", response.data);    
+    console.log("Sign-up successful:", response.data);
   }).catch((error) => {
-    console.error("Sign-in failed:", error);
+    console.error("Sign-up failed:", error);
   });
 }
