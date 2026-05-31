@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { Navbar } from "./navbar";
 
 interface Video {
   thumbnail: string;
@@ -8,6 +9,7 @@ interface Video {
     username: string;
   };
   title: string;
+  slug:string
 }
 
 export function Landing() {
@@ -27,6 +29,7 @@ export function Landing() {
   return (
     <div>
       <h1>Landing Page</h1>
+      <Navbar/>
 
       <div style={{display:"flex ", flexWrap:"wrap",gap:"40px",margin:"0 40px 0 40px", justifyContent:"center" }}>
         {videos.map((video) => (
@@ -35,14 +38,7 @@ export function Landing() {
           title={video.title}
           profileImg={video.user.ProfileImage}
           userName={video.user.username}
-        />
-      ))}
-      {videos.map((video) => (
-        <VideoCard
-          imageUrl={video.thumbnail}
-          title={video.title}
-          profileImg={video.user.ProfileImage}
-          userName={video.user.username}
+          href={`/watch?id=${video.slug}`}
         />
       ))}
       </div>
@@ -54,14 +50,17 @@ interface IVideoCard {
   title: string;
   profileImg: string;
   userName: string;
-  
+  href:string
 }
-function VideoCard({ imageUrl, title, profileImg, userName }: IVideoCard) {
+function VideoCard({ imageUrl, title, profileImg, userName,href }: IVideoCard) {
   return (
     <div
       style={{
         width: "460px",
         color: "white",
+      }}
+      onClick={() => {
+        window.location.href = href;
       }}
     >
       <img

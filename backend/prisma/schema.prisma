@@ -28,7 +28,6 @@ model User {
 model Uploads {
   id    String   @id @default(uuid())
   title String @default("")
-  slug   String
   VideoUrl String
   thumbnail String
   userId  String
